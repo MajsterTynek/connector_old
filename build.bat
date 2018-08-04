@@ -20,7 +20,7 @@ rem  for your own projects. Enjoy your spaghetti! ".
     goto :EOF
 
 :main
-    g++ main.cpp -Wall -lws2_32 -o connector.exe 
+    g++ main.cpp general/*.cpp -Wall -D__LITTLE_ENDIAN__ -std=c++17 -lws2_32 -o connector.exe 
     if errorlevel 1 goto build_failed
 
     echo.Build succed.
