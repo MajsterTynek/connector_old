@@ -9,5 +9,8 @@ Historical version, for view only...
 
                   License:
 This source code is under "Spaghetti license":
+
 "Feel free to use any part of this code
+
 for your own projects. Enjoy your spaghetti! ".
+
