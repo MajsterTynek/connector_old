@@ -22,8 +22,8 @@ struct circullar_buffer
 
     ~circullar_buffer (); // frees memory
 
-    void reset() { writer = memory, reader = memory; }
-    bool is_empty() { return reader == memory && writer == memory; }
+    void reset() { writer = memory, reader = memory, behind_edge = nullptr; }
+    bool is_empty() { return reader == memory && writer == memory && !behind_edge; }
     unsigned int get_total_writable_area_size (); // only as hint
     unsigned int size ();
 
