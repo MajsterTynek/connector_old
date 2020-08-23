@@ -64,7 +64,7 @@ void circullar_buffer::data_was_readen_from_buffer(char* ptr, unsigned int amoun
     else
     {
         if( reader + amount < behind_edge ) reader += amount;
-        else if( reader + amount == behind_edge ) reader = memory;
+        else if( reader + amount == behind_edge ) reader = memory, behind_edge = nullptr;
         else if( reader + amount > behind_edge ) throw "outside of buffer was readen";
     }
 }
@@ -160,6 +160,8 @@ unsigned int circullar_buffer::getn( char* str, unsigned int amount )
 circullar_buffer& circullar_buffer::putc( char ch ){
     if( writer != reader || is_empty() ) *writer++ = ch;
     else throw "overflow in putc";
+    if( writer == memory + memory_size ) 
+        writer = memory, behind_edge = memory + memory_size;
     return *this;
 }
 
@@ -167,7 +169,7 @@ unsigned char circullar_buffer::getc()
 {
     if( is_empty() ) throw "underflow in getc";
     char ret = *((char*)reader++);
-    if( reader == behind_edge ) reader = memory;
+    if( reader == behind_edge ) reader = memory, behind_edge = nullptr;
     if( reader == writer ) reset();
     return ret;
 }
