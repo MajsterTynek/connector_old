@@ -1,0 +1,10 @@
+-Wall -O2
+-lws2_32 -static
+-D__LITTLE_ENDIAN__
+-DWIN32_LEAN_AND_MEAN
+-D_WIN32_WINNT=0x0A00
+-Iinclude/asio/include
+-std=c++17 -march=native
+-Wno-unused-but-set-variable
+-Wno-strict-aliasing
+ 

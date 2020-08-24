@@ -1,7 +1,10 @@
 // -----------------------------
+#include <string>
+#include <string_view>
 #include <cstring>
 #include <iostream>
-#include <asio.hpp>
+#include <iomanip>
+#include "asio.hpp"
 // #include <cstdlib>
 #include <thread>
 #include <chrono>
@@ -86,7 +89,7 @@ int main(int argc, char* argv[])
 
 			if (error == asio::error::eof)
             {
-                std::cout << "EOF has been met!" << '\n';
+                std::cerr << "EOF has been met!" << '\n';
                 return 1;
             }
 			else if (error) throw std::system_error(error);
@@ -98,7 +101,7 @@ int main(int argc, char* argv[])
 
 		if (packet_ID != 0)
 		{
-			std::cout << "Something different than Response packet recieved!\n";
+			std::cerr << "Something different than Response packet recieved!\n";
 			return 1;
 		}
 
@@ -108,6 +111,7 @@ int main(int argc, char* argv[])
 		JSON = new char[json_len + 1];
 		JSON[json_len] = '\0';
 		recv_buf.getn(JSON, json_len);
+		std::string_view JSON_(JSON, json_len);
 
 		long long pong;
 		bool ping_pong_OK = false;
@@ -115,22 +119,36 @@ int main(int argc, char* argv[])
 		if (pong == 0) ping_pong_OK = true;
 
 		// displaying results
-		std::cout << JSON << '\n' << '\n'
+		std::cout << JSON_ << std::endl;
+		std::cerr << '\n' // idk even why I use both types of newlines lol
 			<< "\tping pong is:\t" << (ping_pong_OK ? "OK!\n" : "broken!\n")
 			<< "\tbytes sent:\t" << bytes_sent << '\n'
 			<< "\tbytes readen:\t" << bytes_readen << '\n';
 
-		if (recv_buf.size())
-		{
-			std::cout << "\tremaining data in recv_buf: " << recv_buf.size() << ' ' << "bytes\n";
+		int rem = recv_buf.size();
+		if ( rem > 0 ) 
+		{	// there should be nothing to read after pong packet
+			std::cerr << "\tremaining data in recv_buf: " << rem << ' ' << "bytes\n\n";
+			
+			char* remaining = new char[ rem ];
+			recv_buf.getn( remaining, rem );
 
+			std::cerr << std::hex << std::setfill('0');
+			for (int i = 0; i < rem; ++i )
+			{
+				std::cerr <<  std::setw( 2 ) << (int)(remaining[i]);
+				if ( i%16 == 15 ) std::cerr << std::endl;
+			}
+			std::cerr << std::endl;
+			delete[] remaining;
 		}
+		delete[] JSON;
 	}
 	catch (std::exception& e)
 	{
 		std::cerr << e.what() << std::endl;
 	}
-	catch (const char* str)
+	catch (const char* str) // TO-DO: rework exceptions
 	{
 	    std::cerr << str;
 	}
