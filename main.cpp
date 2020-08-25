@@ -22,9 +22,13 @@ int main(int argc, char* argv[])
 		using asio::ip::tcp;
 		using asio::buffer;
 
-		if (argc != 3) {
-			std::cerr << "Usage: Connector <host> <port>"; return 1;
-		}
+		std::string host, port;
+		switch ( argc )
+        {
+            case 2: host = argv[1], port  = "25565"; break;
+            case 3: host = argv[1], port  = argv[2]; break;
+            default: std::cout << "Usage: Connector <host> [port]"; return 1;
+        }
 
 		// buffers
 		circullar_buffer send_buf;
@@ -38,18 +42,18 @@ int main(int argc, char* argv[])
 		varint handshake_len;
 		varint handshake_ID = 0;
 		varint protocol_ver = -1; // should be -1 for noclient convention // 340 = 1.12.2
-		varint hostname_len = strlen(argv[1]);
-		char* hostname_ptr = argv[1];
-		unsigned short port = atoi(argv[2]);
+		varint hostname_len = strlen( host.data() ); // argv[1]
+		char* hostname_ptr = host.data();
+		unsigned short port_ = atoi( port.data() ); // argv[2]
 		varint nxt_state = 0x01;
 
 		handshake_len = 0;
 		handshake_len = handshake_ID.len() + protocol_ver.len() +
-			hostname_len.len() + hostname_len + sizeof(port) + nxt_state.len();
+			hostname_len.len() + hostname_len + sizeof(port_) + nxt_state.len();
 
 		send_buf << handshake_len << handshake_ID << protocol_ver << hostname_len;
 		send_buf.putn(hostname_ptr, hostname_len);
-		send_buf << port << nxt_state;
+		send_buf << port_ << nxt_state;
 
 		// request : len, ID, nodata
 		send_buf << varint(1) << varint(0);
@@ -60,7 +64,7 @@ int main(int argc, char* argv[])
 		// connection
 		asio::io_service io_service;
 		tcp::resolver resolver(io_service);
-		tcp::resolver::query query(argv[1], argv[2]);
+		tcp::resolver::query query(host, port);
 		tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 		tcp::socket socket(io_service);
 		asio::connect(socket, endpoint_iterator);
