@@ -41,7 +41,11 @@ int main(int argc, char* argv[])
 		// handshake
 		varint handshake_len;
 		varint handshake_ID = 0;
-		varint protocol_ver = -1; // should be -1 for noclient convention // 340 = 1.12.2
+		varint protocol_ver = 340; // 340 = 1.12.2
+		// should be -1 for noclient convention 
+		// not every server supports that 
+		// and causes connection hangs and closes
+
 		varint hostname_len = strlen( host.data() ); // argv[1]
 		char* hostname_ptr = host.data();
 		unsigned short port_ = atoi( port.data() ); // argv[2]
@@ -56,10 +60,10 @@ int main(int argc, char* argv[])
 		send_buf << port_ << nxt_state;
 
 		// request : len, ID, nodata
-		send_buf << varint(1) << varint(0);
+		/*send_buf << varint(1) << varint(0);*/
 
 		// ping pong : len, ID, payload
-		send_buf << varint(9) << varint(1) << (long long)0;
+		/*send_buf << varint(9) << varint(1) << (long long)0;*/
 
 		// connection
 		asio::io_service io_service;
@@ -76,11 +80,18 @@ int main(int argc, char* argv[])
 		send_buf.data_was_readen_from_buffer(data, size);
 		bytes_sent += size;
 
+		asio::write(socket, asio::buffer("\x01\x00", 2), error);
+		bytes_sent += 2; // request
+
+		/*std::this_thread::sleep_for( std::chrono::milliseconds(200) );
+		asio::write(socket, asio::buffer("\x09\x01\0\0\0\0\0\0\0\0", 10), error);
+		bytes_sent += 10; // ping */
+
 		int bytes_prev;
 
 		// for (;;)
 		// {
-		    std::this_thread::sleep_for( std::chrono::milliseconds(1000) );
+		    std::this_thread::sleep_for( std::chrono::milliseconds(800) );
 			bytes_prev = bytes_readen;
 
 			data = recv_buf.get_linear_writable_buffer_pointer();
@@ -119,8 +130,8 @@ int main(int argc, char* argv[])
 
 		long long pong;
 		bool ping_pong_OK = false;
-		recv_buf >> packet_len >> packet_ID >> pong;
-		if (pong == 0) ping_pong_OK = true;
+		/*recv_buf >> packet_len >> packet_ID >> pong;
+		if (pong == 0) ping_pong_OK = true; */
 
 		// displaying results
 		std::cout << JSON_ << std::endl;
