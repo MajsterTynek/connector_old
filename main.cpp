@@ -23,11 +23,13 @@ int main(int argc, char* argv[])
 		using asio::buffer;
 
 		std::string host, port;
+		bool single_send = true;
 		switch ( argc )
         {
             case 2: host = argv[1], port  = "25565"; break;
             case 3: host = argv[1], port  = argv[2]; break;
-            default: std::cout << "Usage: Connector <host> [port]"; return 1;
+            case 4: host = argv[1], port  = argv[2], single_send = false; break;
+            default: std::cout << "Usage: Connector <host> [port [unpack]]"; return 1;
         }
 
 		// buffers
@@ -59,11 +61,13 @@ int main(int argc, char* argv[])
 		send_buf.putn(hostname_ptr, hostname_len);
 		send_buf << port_ << nxt_state;
 
-		// request : len, ID, nodata
-		/*send_buf << varint(1) << varint(0);*/
-
-		// ping pong : len, ID, payload
-		/*send_buf << varint(9) << varint(1) << (long long)0;*/
+		if ( single_send ) 
+		{
+			// request : len, ID, nodata
+			send_buf << varint(1) << varint(0);
+			// ping pong : len, ID, payload
+			send_buf << varint(9) << varint(1) << (long long)0;
+		}
 
 		// connection
 		asio::io_service io_service;
@@ -80,12 +84,14 @@ int main(int argc, char* argv[])
 		send_buf.data_was_readen_from_buffer(data, size);
 		bytes_sent += size;
 
-		asio::write(socket, asio::buffer("\x01\x00", 2), error);
-		bytes_sent += 2; // request
-
-		/*std::this_thread::sleep_for( std::chrono::milliseconds(200) );
-		asio::write(socket, asio::buffer("\x09\x01\0\0\0\0\0\0\0\0", 10), error);
-		bytes_sent += 10; // ping */
+		if ( !single_send ) 
+		{
+			asio::write(socket, asio::buffer("\x01\x00", 2), error);
+			bytes_sent += 2; // request
+			std::this_thread::sleep_for( std::chrono::milliseconds(200) );
+			asio::write(socket, asio::buffer("\x09\x01\0\0\0\0\0\0\0\0", 10), error);
+			bytes_sent += 10; // ping
+		}
 
 		int bytes_prev;
 
@@ -130,15 +136,17 @@ int main(int argc, char* argv[])
 
 		long long pong;
 		bool ping_pong_OK = false;
-		/*recv_buf >> packet_len >> packet_ID >> pong;
-		if (pong == 0) ping_pong_OK = true; */
+		recv_buf >> packet_len >> packet_ID >> pong;
+		if (pong == 0) ping_pong_OK = true;
 
 		// displaying results
 		std::cout << JSON_ << std::endl;
 		std::cerr << '\n' // idk even why I use both types of newlines lol
-			<< "\tping pong is:\t" << (ping_pong_OK ? "OK!\n" : "broken!\n")
+		/*	<< "\tping pong is:\t" << (ping_pong_OK ? "OK!\n" : "broken!\n") */
 			<< "\tbytes sent:\t" << bytes_sent << '\n'
 			<< "\tbytes readen:\t" << bytes_readen << '\n';
+
+		if ( !ping_pong_OK ) std::cerr << "\tping pong is:\tbroken!\n";
 
 		int rem = recv_buf.size();
 		if ( rem > 0 ) 
