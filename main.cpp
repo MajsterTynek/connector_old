@@ -11,6 +11,7 @@
 #include <system_error>
 // #include "usage.hpp"
 #include "general\circular_buffer.hpp"
+#include "general\srv_redirect.hpp"
 #include "general\varlen.hpp"
 // -----------------------------
 
@@ -31,6 +32,12 @@ int main(int argc, char* argv[])
             case 4: host = argv[1], port  = argv[2], single_send = false; break;
             default: std::cout << "Usage: Connector <host> [port [unpack]]"; return 1;
         }
+
+		srv_redirect response( host, port );
+		std::clog << "Checking service: " << response.srv_domain << std::endl;
+		response.request( host, port );
+		std::clog << "Connecting to: " << host << ":" << port << std::endl;
+
 
 		// buffers
 		circullar_buffer send_buf;
@@ -110,7 +117,7 @@ int main(int argc, char* argv[])
 
 			if (error == asio::error::eof)
             {
-                std::cerr << "EOF has been met!" << '\n';
+                std::clog << "EOF has been met!" << '\n';
                 return 1;
             }
 			else if (error) throw std::system_error(error);
@@ -122,7 +129,7 @@ int main(int argc, char* argv[])
 
 		if (packet_ID != 0)
 		{
-			std::cerr << "Something different than Response packet recieved!\n";
+			std::clog << "Something different than Response packet recieved!\n";
 			return 1;
 		}
 
@@ -141,39 +148,39 @@ int main(int argc, char* argv[])
 
 		// displaying results
 		std::cout << JSON_ << std::endl;
-		std::cerr << '\n' // idk even why I use both types of newlines lol
+		std::clog << '\n' // idk even why I use both types of newlines lol
 		/*	<< "\tping pong is:\t" << (ping_pong_OK ? "OK!\n" : "broken!\n") */
 			<< "\tbytes sent:\t" << bytes_sent << '\n'
 			<< "\tbytes readen:\t" << bytes_readen << '\n';
 
-		if ( !ping_pong_OK ) std::cerr << "\tping pong is:\tbroken!\n";
+		if ( !ping_pong_OK ) std::clog << "\tping pong is:\tbroken!\n";
 
 		int rem = recv_buf.size();
 		if ( rem > 0 ) 
 		{	// there should be nothing to read after pong packet
-			std::cerr << "\tremaining data in recv_buf: " << rem << ' ' << "bytes\n\n";
+			std::clog << "\tremaining data in recv_buf: " << rem << ' ' << "bytes\n\n";
 			
 			char* remaining = new char[ rem ];
 			recv_buf.getn( remaining, rem );
 
-			std::cerr << std::hex << std::setfill('0');
+			std::clog << std::hex << std::setfill('0');
 			for (int i = 0; i < rem; ++i )
 			{
-				std::cerr <<  std::setw( 2 ) << (int)(remaining[i]);
-				if ( i%16 == 15 ) std::cerr << std::endl;
+				std::clog <<  std::setw( 2 ) << (int)(remaining[i]);
+				if ( i%16 == 15 ) std::clog << std::endl;
 			}
-			std::cerr << std::endl;
+			std::clog << std::endl;
 			delete[] remaining;
 		}
 		delete[] JSON;
 	}
 	catch (std::exception& e)
 	{
-		std::cerr << e.what() << std::endl;
+		std::clog << e.what() << std::endl;
 	}
 	catch (const char* str) // TO-DO: rework exceptions
 	{
-	    std::cerr << str;
+	    std::clog << str;
 	}
 
 	return 0;

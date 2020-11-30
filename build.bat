@@ -24,5 +24,9 @@ rem  for your own projects. Enjoy your spaghetti! ".
 
     if errorlevel 1 goto build_failed
 
+    strip --strip-all connector.exe
+
+    if errorlevel 1 goto build_failed
+
     echo.Build succed.
     goto :EOF

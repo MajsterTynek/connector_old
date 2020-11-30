@@ -1,5 +1,7 @@
 -Wall -O2
--lws2_32 -static
+-static-libgcc
+-static-libstdc++
+-lws2_32 -lcares
 -D__LITTLE_ENDIAN__
 -DWIN32_LEAN_AND_MEAN
 -D_WIN32_WINNT=0x0A00

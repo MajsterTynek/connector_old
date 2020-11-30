@@ -2,34 +2,32 @@
 #define MC_SrvRedirect
 
 #include <string>
-// #include "ares.h"
-
-// WIP - I think I am going to use C-Ares here
+#include "srv_request.hpp"
 struct srv_redirect
 { 
-    bool good, fail;
+    // bool good, fail;
 
     std::string domain;
     std::string srv_domain;
+    ares_srv_reply *answer;
     std::string host;
     std::string port;
 
-    bool request(); // DNS request here
+    // TODO result cache of SRV responses
+    void request(std::string &domain_, std::string &port_);
 
-    srv_redirect(std::string domain_) : 
-        domain ( domain_ ), 
-        srv_domain ( domain_.insert(0, "_minecraft._tcp.") ),
-        good ( false ), 
-        fail ( false )
+    srv_redirect(std::string &domain_, std::string &port_) :
+        domain ( domain_ ),
+        answer ( nullptr ),
+        host ( domain_ ),
+        port ( port_ )
     {
-        if ( !request() ) // set defaults
-        {
-            host = domain;
-            port = 25565;
-            good = true;
-        }
-    };
+        srv_domain = std::string("_minecraft._tcp.") + domain_;
+        dns_library *library = dns_library::getLibrary();
+        library->request(srv_domain.c_str(), &answer);
+    }
 
+    ~srv_redirect(){ ares_free_data(answer); }
 };
 
 #endif // MC_SrvRedirect
