@@ -1,3 +1,4 @@
 .vscode/*
 include/asio/*
 connector.exe
+status.json

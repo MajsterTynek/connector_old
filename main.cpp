@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
             case 2: host = argv[1], port  = "25565"; break;
             case 3: host = argv[1], port  = argv[2]; break;
             case 4: host = argv[1], port  = argv[2], single_send = false; break;
-            default: std::cout << "Usage: Connector <host> [port [unpack]]"; return 1;
+            default: std::cout << "Usage: Connector <host> [port [pack]]"; return 1;
         }
 
 		srv_redirect response( host, port );
