@@ -13,7 +13,7 @@ circullar_buffer::~circullar_buffer() { delete[] memory; } /* frees memory */
 
 circullar_buffer::circullar_buffer (int mem_size, char* memory_pointer, int edge_size ):
     memory_size(mem_size), memory(memory_pointer), writer(memory), reader(memory),
-    edge(memory_pointer + edge_size - edge_size), behind_edge(nullptr) {} /* pointer from new[] #reowning */
+    edge(memory_pointer + mem_size - edge_size), behind_edge(nullptr) {} /* pointer from new[] #reowning */
 
 void circullar_buffer::data_was_written_into_buffer(char* ptr, unsigned int amount)
 {
